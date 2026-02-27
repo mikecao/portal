@@ -13,7 +13,7 @@ interface Message {
 export function useChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [provider, setProvider] = useState<Provider>('anthropic');
+  const [provider, setProvider] = useState<Provider>('openai');
   const assistantContentRef = useRef('');
 
   const sendMessage = useCallback(

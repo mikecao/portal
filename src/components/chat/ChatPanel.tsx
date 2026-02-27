@@ -58,8 +58,8 @@ export function ChatPanel() {
             value={provider}
             onChange={(e) => setProvider(e.target.value as 'anthropic' | 'openai')}
           >
+            <option value="openai">GPT-5</option>
             <option value="anthropic">Claude</option>
-            <option value="openai">GPT-4o</option>
           </select>
           <button
             className={styles.clearButton}
@@ -86,7 +86,7 @@ export function ChatPanel() {
             }`}
           >
             <div className={styles.messageRole}>
-              {message.role === 'user' ? 'You' : provider === 'anthropic' ? 'Claude' : 'GPT-4o'}
+              {message.role === 'user' ? 'You' : provider === 'anthropic' ? 'Claude' : 'GPT-5'}
             </div>
             <div className={styles.messageContent}>
               {message.content || (isLoading ? '...' : '')}

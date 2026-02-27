@@ -1,25 +1,41 @@
+import path from 'node:path';
+import os from 'node:os';
 import { streamText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
-import { openai } from '@ai-sdk/openai';
+import { createChatGPTOAuth } from 'ai-sdk-provider-chatgpt-oauth';
+
+const chatgpt = createChatGPTOAuth({
+  autoRefresh: true,
+  credentialsPath: path.join(os.homedir(), '.codex', 'auth.json'),
+});
 
 function getModel(provider: string) {
   switch (provider) {
     case 'anthropic':
       return anthropic('claude-sonnet-4-20250514');
     case 'openai':
-      return openai('gpt-4o');
+      return chatgpt('gpt-5');
     default:
-      return anthropic('claude-sonnet-4-20250514');
+      return chatgpt('gpt-5');
   }
 }
 
 export async function POST(req: Request) {
   const { provider, messages } = await req.json();
 
-  const result = streamText({
-    model: getModel(provider),
-    messages,
-  });
+  try {
+    const result = streamText({
+      model: getModel(provider),
+      messages,
+    });
 
-  return result.toTextStreamResponse();
+    return result.toTextStreamResponse();
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Chat API error:', message);
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }

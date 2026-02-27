@@ -22,7 +22,7 @@ function createWindow() {
       nodeIntegration: false,
       sandbox: false,
     },
-    titleBarStyle: 'hiddenInset',
+    frame: false,
     show: false,
   });
 

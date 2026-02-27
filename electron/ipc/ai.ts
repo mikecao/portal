@@ -1,8 +1,15 @@
+import path from 'node:path';
+import os from 'node:os';
 import { type IpcMain, BrowserWindow } from 'electron';
 import { streamText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
-import { openai } from '@ai-sdk/openai';
+import { createChatGPTOAuth } from 'ai-sdk-provider-chatgpt-oauth';
 import type { AIMessage } from '../preload.js';
+
+const chatgpt = createChatGPTOAuth({
+  autoRefresh: true,
+  credentialsPath: path.join(os.homedir(), '.codex', 'auth.json'),
+});
 
 let currentAbortController: AbortController | null = null;
 
@@ -17,7 +24,7 @@ function getModel(provider: 'anthropic' | 'openai') {
     case 'anthropic':
       return anthropic('claude-sonnet-4-20250514');
     case 'openai':
-      return openai('gpt-4o');
+      return chatgpt('gpt-5');
   }
 }
 

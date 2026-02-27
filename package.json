@@ -16,13 +16,14 @@
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
-    "ai": "^4.0.0",
-    "@ai-sdk/anthropic": "^1.0.0",
-    "@ai-sdk/openai": "^1.0.0",
+    "@ai-sdk/anthropic": "^3.0.48",
+    "@ai-sdk/openai": "^3.0.36",
+    "ai": "^6.0.103",
+    "ai-sdk-provider-chatgpt-oauth": "^1.1.0",
+    "electron-serve": "^3.0.1",
     "next": "^15.3.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "electron-serve": "^3.0.1"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
