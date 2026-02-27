@@ -1,0 +1,38 @@
+{
+  "name": "portal",
+  "version": "1.0.0",
+  "description": "AI-powered IDE",
+  "license": "MIT",
+  "author": "Mike Cao <mike@mikecao.com>",
+  "type": "module",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "electron:compile": "tsup electron/main.ts electron/preload.ts --format esm --outDir dist-electron --external electron",
+    "electron:dev": "pnpm electron:compile && concurrently --kill-others \"next dev --turbopack -p 3333\" \"wait-on http://localhost:3333 && electron .\"",
+    "electron:build": "pnpm electron:compile && next build && electron-builder",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "ai": "^4.0.0",
+    "@ai-sdk/anthropic": "^1.0.0",
+    "@ai-sdk/openai": "^1.0.0",
+    "next": "^15.3.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "electron-serve": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "concurrently": "^9.0.0",
+    "electron": "^34.0.0",
+    "electron-builder": "^26.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.7.0",
+    "wait-on": "^8.0.0"
+  }
+}

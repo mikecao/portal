@@ -1,0 +1,15 @@
+appId: com.portal.app
+productName: Portal
+directories:
+  output: out
+files:
+  - dist-electron/**/*
+  - .next/standalone/**/*
+  - .next/static/**/*
+  - public/**/*
+win:
+  target: nsis
+mac:
+  target: dmg
+linux:
+  target: AppImage
