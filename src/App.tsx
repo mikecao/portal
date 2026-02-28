@@ -1,11 +1,9 @@
-'use client';
-
 import { useState, useCallback } from 'react';
-import styles from './page.module.css';
 import { ChatPanel } from '@/components/chat/ChatPanel';
 import { EditorPanel } from '@/components/editor/EditorPanel';
+import styles from './App.module.css';
 
-export default function Home() {
+export default function App() {
   const [splitPosition, setSplitPosition] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
 

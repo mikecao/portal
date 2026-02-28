@@ -1,5 +1,3 @@
-'use client';
-
 import styles from './EditorPanel.module.css';
 
 export function EditorPanel() {

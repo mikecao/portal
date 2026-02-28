@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useRef, useEffect } from 'react';
 import { useChat } from '@/hooks/useChat';
 import styles from './ChatPanel.module.css';

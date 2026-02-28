@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useCallback, useRef } from 'react';
 
 type Provider = 'anthropic' | 'openai';
@@ -43,7 +41,6 @@ export function useChat() {
 
       try {
         if (typeof window !== 'undefined' && window.portal) {
-          // Running in Electron — use IPC bridge
           await window.portal.ai.chat(provider, chatMessages, (event) => {
             if (event.type === 'text-delta' && event.content) {
               assistantContentRef.current += event.content;
@@ -64,7 +61,6 @@ export function useChat() {
             }
           });
         } else {
-          // Running in browser — use Next.js API route
           const res = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

@@ -3,14 +3,11 @@ node_modules/
 .pnp
 .pnp.js
 
-# next.js
+# builds
 .next/
 out/
-
-# electron
+dist/
 dist-electron/
-
-# production
 build/
 
 # misc

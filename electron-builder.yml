@@ -4,8 +4,7 @@ directories:
   output: out
 files:
   - dist-electron/**/*
-  - .next/standalone/**/*
-  - .next/static/**/*
+  - dist/**/*
   - public/**/*
 win:
   target: nsis

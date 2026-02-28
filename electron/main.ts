@@ -22,7 +22,7 @@ function createWindow() {
       nodeIntegration: false,
       sandbox: false,
     },
-    frame: false,
+    frame: true,
     show: false,
   });
 
@@ -34,7 +34,7 @@ function createWindow() {
     mainWindow.loadURL('http://localhost:3333');
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../.next/standalone/index.html'));
+    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
 
   mainWindow.on('closed', () => {
