@@ -8,24 +8,33 @@
 .editorPane {
   height: 100%;
   overflow: hidden;
-  min-width: 200px;
 }
 
 .chatPane {
   height: 100%;
   overflow: hidden;
-  min-width: 200px;
 }
 
-.divider {
+.resizeHandle {
   width: 4px;
-  cursor: col-resize;
-  background: var(--border);
-  transition: background 0.15s;
   flex-shrink: 0;
+  background: var(--border);
+  cursor: col-resize;
+  transition: background 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.divider:hover,
-.dividerActive {
+.resizeHandle:hover,
+.resizeHandle[data-separator]:not([data-separator='inactive']):not(
+    [data-separator='disabled']
+  ) {
   background: var(--accent);
+}
+
+.resizeHandleBar {
+  width: 1px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.2);
 }
