@@ -2,9 +2,13 @@ import path from 'node:path';
 import os from 'node:os';
 import { type IpcMain, BrowserWindow } from 'electron';
 import { streamText } from 'ai';
-import { anthropic } from '@ai-sdk/anthropic';
 import { createChatGPTOAuth } from 'ai-sdk-provider-chatgpt-oauth';
-import type { AIMessage } from '../preload.js';
+import type {
+  AIMessage,
+  AIChatOptions,
+  ChatModelId,
+  ReasoningEffort,
+} from '../preload.js';
 
 const chatgpt = createChatGPTOAuth({
   autoRefresh: true,
@@ -14,23 +18,42 @@ const chatgpt = createChatGPTOAuth({
 let currentAbortController: AbortController | null = null;
 
 interface ChatRequest {
-  provider: 'anthropic' | 'openai';
   messages: AIMessage[];
+  options: AIChatOptions;
   channel: string;
 }
 
-function getModel(provider: 'anthropic' | 'openai') {
-  switch (provider) {
-    case 'anthropic':
-      return anthropic('claude-sonnet-4-20250514');
-    case 'openai':
-      return chatgpt('gpt-5');
+const allowedModels: ChatModelId[] = ['gpt-5', 'gpt-5-codex', 'codex-mini-latest'];
+const allowedEfforts: ReasoningEffort[] = ['none', 'low', 'medium', 'high'];
+
+function normalizeModelId(modelId: string | undefined): ChatModelId {
+  if (modelId && allowedModels.includes(modelId as ChatModelId)) {
+    return modelId as ChatModelId;
   }
+  return 'gpt-5';
+}
+
+function normalizeReasoningEffort(
+  reasoningEffort: string | undefined,
+): ReasoningEffort {
+  if (reasoningEffort && allowedEfforts.includes(reasoningEffort as ReasoningEffort)) {
+    return reasoningEffort as ReasoningEffort;
+  }
+  return 'medium';
+}
+
+function getModel(options: AIChatOptions | undefined) {
+  const modelId = normalizeModelId(options?.modelId);
+  const reasoningEffort = normalizeReasoningEffort(options?.reasoningEffort);
+
+  return chatgpt(modelId, {
+    reasoningEffort: reasoningEffort === 'none' ? null : reasoningEffort,
+  });
 }
 
 export function registerAIHandlers(ipcMain: IpcMain) {
   ipcMain.handle('ai:chat', async (event, request: ChatRequest) => {
-    const { provider, messages, channel } = request;
+    const { messages, options, channel } = request;
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win) return;
 
@@ -38,7 +61,7 @@ export function registerAIHandlers(ipcMain: IpcMain) {
 
     try {
       const result = streamText({
-        model: getModel(provider),
+        model: getModel(options),
         messages,
         abortSignal: currentAbortController.signal,
       });

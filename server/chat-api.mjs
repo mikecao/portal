@@ -1,24 +1,46 @@
 import path from 'node:path';
 import os from 'node:os';
 import http from 'node:http';
+import fs from 'node:fs';
 import { streamText } from 'ai';
-import { anthropic } from '@ai-sdk/anthropic';
 import { createChatGPTOAuth } from 'ai-sdk-provider-chatgpt-oauth';
 
 const port = Number(process.env.API_PORT || 3334);
+const credentialsPath = path.join(os.homedir(), '.codex', 'auth.json');
 
 const chatgpt = createChatGPTOAuth({
   autoRefresh: true,
-  credentialsPath: path.join(os.homedir(), '.codex', 'auth.json'),
+  credentialsPath,
 });
 
-function getModel(provider) {
-  switch (provider) {
-    case 'anthropic':
-      return anthropic('claude-sonnet-4-20250514');
-    case 'openai':
-    default:
-      return chatgpt('gpt-5');
+const allowedModels = ['gpt-5', 'gpt-5-codex', 'codex-mini-latest'];
+const allowedEfforts = ['none', 'low', 'medium', 'high'];
+
+function normalizeModelId(modelId) {
+  if (typeof modelId === 'string' && allowedModels.includes(modelId)) {
+    return modelId;
+  }
+  return 'gpt-5';
+}
+
+function normalizeReasoningEffort(reasoningEffort) {
+  if (typeof reasoningEffort === 'string' && allowedEfforts.includes(reasoningEffort)) {
+    return reasoningEffort;
+  }
+  return 'medium';
+}
+
+function getModel(modelId, reasoningEffort) {
+  return chatgpt(modelId, {
+    reasoningEffort: reasoningEffort === 'none' ? null : reasoningEffort,
+  });
+}
+
+function assertProviderConfigured() {
+  if (!process.env.OPENAI_API_KEY && !fs.existsSync(credentialsPath)) {
+    throw new Error(
+      'OpenAI is not configured. Run codex login to create ~/.codex/auth.json or set OPENAI_API_KEY.',
+    );
   }
 }
 
@@ -45,10 +67,13 @@ const server = http.createServer(async (req, res) => {
       raw += chunk;
     }
 
-    const { provider, messages } = JSON.parse(raw || '{}');
+    const { messages, modelId, reasoningEffort } = JSON.parse(raw || '{}');
+    const resolvedModelId = normalizeModelId(modelId);
+    const resolvedReasoningEffort = normalizeReasoningEffort(reasoningEffort);
+    assertProviderConfigured();
 
     const result = streamText({
-      model: getModel(provider),
+      model: getModel(resolvedModelId, resolvedReasoningEffort),
       messages,
     });
 
