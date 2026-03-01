@@ -42,10 +42,29 @@
   gap: 6px;
 }
 
+.projectRow {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: stretch;
+}
+
+.projectRow:hover {
+  background: var(--bg-tertiary);
+}
+
+.activeProjectRow {
+  background: rgba(0, 120, 212, 0.15);
+  border-color: var(--accent);
+}
+
 .projectTab {
   width: 100%;
-  border: 1px solid transparent;
-  border-radius: 6px;
+  border: none;
+  border-radius: 6px 0 0 6px;
   background: transparent;
   color: var(--text-primary);
   text-align: left;
@@ -54,16 +73,11 @@
   flex-direction: column;
   gap: 4px;
   cursor: pointer;
+  min-width: 0;
 }
 
 .projectTab:hover {
-  background: var(--bg-tertiary);
-  border-color: var(--border);
-}
-
-.activeProjectTab {
-  background: rgba(0, 120, 212, 0.15);
-  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .projectName {
@@ -81,6 +95,27 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.removeButton {
+  width: 26px;
+  border: none;
+  border-left: 1px solid var(--border);
+  border-radius: 0 6px 6px 0;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.removeButton:hover:not(:disabled) {
+  color: #fecaca;
+  background: #7f1d1d;
+}
+
+.removeButton:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .emptyState {

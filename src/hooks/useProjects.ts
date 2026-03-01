@@ -141,6 +141,26 @@ export function useProjects() {
     [applySnapshot, getProjectsApi, handleError],
   );
 
+  const removeProject = useCallback(
+    async (projectId: string) => {
+      const projectsApi = getProjectsApi();
+      if (!projectsApi) {
+        handleError(new Error('Projects API unavailable outside Electron context'));
+        return null;
+      }
+
+      try {
+        const snapshot = await projectsApi.remove(projectId);
+        applySnapshot(snapshot);
+        return snapshot;
+      } catch (error: unknown) {
+        handleError(error);
+        return null;
+      }
+    },
+    [applySnapshot, getProjectsApi, handleError],
+  );
+
   const activeProject = useMemo(
     () => state.projects.find((project) => project.id === state.activeProjectId) ?? null,
     [state.activeProjectId, state.projects],
@@ -157,5 +177,6 @@ export function useProjects() {
     addProjectFromDialog,
     setActiveProject,
     updateProject,
+    removeProject,
   };
 }

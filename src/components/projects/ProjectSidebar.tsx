@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type MouseEvent } from 'react';
 import styles from './ProjectSidebar.module.css';
 
 interface ProjectSidebarProps {
@@ -7,6 +7,7 @@ interface ProjectSidebarProps {
   isLoading: boolean;
   onAddProject: () => Promise<unknown>;
   onSelectProject: (projectId: string) => void;
+  onRemoveProject: (projectId: string) => Promise<unknown>;
 }
 
 export function ProjectSidebar({
@@ -15,8 +16,10 @@ export function ProjectSidebar({
   isLoading,
   onAddProject,
   onSelectProject,
+  onRemoveProject,
 }: ProjectSidebarProps) {
   const [isAdding, setIsAdding] = useState(false);
+  const [removingProjectId, setRemovingProjectId] = useState<string | null>(null);
 
   const handleAdd = async () => {
     if (isAdding) return;
@@ -25,6 +28,26 @@ export function ProjectSidebar({
       await onAddProject();
     } finally {
       setIsAdding(false);
+    }
+  };
+
+  const handleRemove = async (event: MouseEvent<HTMLButtonElement>, project: ProjectRecord) => {
+    event.stopPropagation();
+
+    if (removingProjectId) return;
+
+    const shouldRemove = window.confirm(
+      `Remove project "${project.name}" from this app?`,
+    );
+    if (!shouldRemove) {
+      return;
+    }
+
+    setRemovingProjectId(project.id);
+    try {
+      await onRemoveProject(project.id);
+    } finally {
+      setRemovingProjectId(null);
     }
   };
 
@@ -49,15 +72,28 @@ export function ProjectSidebar({
             const isActive = project.id === activeProjectId;
 
             return (
-              <button
+              <div
                 key={project.id}
-                className={`${styles.projectTab} ${isActive ? styles.activeProjectTab : ''}`}
-                onClick={() => onSelectProject(project.id)}
-                title={project.rootPath}
+                className={`${styles.projectRow} ${isActive ? styles.activeProjectRow : ''}`}
               >
-                <span className={styles.projectName}>{project.name}</span>
-                <span className={styles.projectPath}>{project.rootPath}</span>
-              </button>
+                <button
+                  className={styles.projectTab}
+                  onClick={() => onSelectProject(project.id)}
+                  title={project.rootPath}
+                >
+                  <span className={styles.projectName}>{project.name}</span>
+                  <span className={styles.projectPath}>{project.rootPath}</span>
+                </button>
+                <button
+                  className={styles.removeButton}
+                  onClick={(event) => handleRemove(event, project)}
+                  title={`Remove ${project.name}`}
+                  aria-label={`Remove ${project.name}`}
+                  disabled={removingProjectId === project.id}
+                >
+                  x
+                </button>
+              </div>
             );
           })
         )}

@@ -16,6 +16,7 @@ export default function App() {
     addProjectFromDialog,
     setActiveProject,
     updateProject,
+    removeProject,
   } = useProjects();
   const { start, stop, getProjectState, getProjectLogs } = useRun();
 
@@ -54,6 +55,7 @@ export default function App() {
           isLoading={isLoading}
           onAddProject={handleAddProject}
           onSelectProject={setActiveProject}
+          onRemoveProject={removeProject}
         />
         {error && <div className={styles.errorBanner}>{error}</div>}
       </Panel>
