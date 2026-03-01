@@ -1,0 +1,128 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
+
+interface RunLogLine {
+  stream: 'stdout' | 'stderr';
+  chunk: string;
+  timestamp: string;
+}
+
+interface UseRunState {
+  statesByProjectId: Record<string, RunState>;
+  logsByProjectId: Record<string, RunLogLine[]>;
+}
+
+export function useRun() {
+  const [state, setState] = useState<UseRunState>({
+    statesByProjectId: {},
+    logsByProjectId: {},
+  });
+
+  useEffect(() => {
+    let isDisposed = false;
+
+    const setup = async () => {
+      const initialStates = await window.portal.run.states();
+      if (isDisposed) {
+        return;
+      }
+
+      setState((prev) => ({
+        ...prev,
+        statesByProjectId: initialStates.reduce<Record<string, RunState>>((acc, entry) => {
+          acc[entry.projectId] = entry;
+          return acc;
+        }, {}),
+      }));
+    };
+
+    void setup();
+
+    const unsubscribe = window.portal.run.onEvent((event) => {
+      if (event.type === 'state') {
+        setState((prev) => ({
+          ...prev,
+          statesByProjectId: {
+            ...prev.statesByProjectId,
+            [event.state.projectId]: event.state,
+          },
+        }));
+        return;
+      }
+
+      setState((prev) => {
+        const currentLogs = prev.logsByProjectId[event.projectId] ?? [];
+        const nextLogs = [...currentLogs, event].slice(-500);
+
+        return {
+          ...prev,
+          logsByProjectId: {
+            ...prev.logsByProjectId,
+            [event.projectId]: nextLogs,
+          },
+        };
+      });
+    });
+
+    return () => {
+      isDisposed = true;
+      unsubscribe();
+    };
+  }, []);
+
+  const start = useCallback(async (input: RunStartInput) => {
+    const nextState = await window.portal.run.start(input);
+    setState((prev) => ({
+      ...prev,
+      statesByProjectId: {
+        ...prev.statesByProjectId,
+        [input.projectId]: nextState,
+      },
+      logsByProjectId: {
+        ...prev.logsByProjectId,
+        [input.projectId]: [],
+      },
+    }));
+    return nextState;
+  }, []);
+
+  const stop = useCallback(async (projectId: string) => {
+    const nextState = await window.portal.run.stop(projectId);
+    setState((prev) => ({
+      ...prev,
+      statesByProjectId: {
+        ...prev.statesByProjectId,
+        [projectId]: nextState,
+      },
+    }));
+    return nextState;
+  }, []);
+
+  const getProjectState = useCallback(
+    (projectId: string): RunState =>
+      state.statesByProjectId[projectId] ?? {
+        projectId,
+        status: 'idle',
+        command: '',
+        cwd: '',
+      },
+    [state.statesByProjectId],
+  );
+
+  const getProjectLogs = useCallback(
+    (projectId: string): RunLogLine[] => state.logsByProjectId[projectId] ?? [],
+    [state.logsByProjectId],
+  );
+
+  const allStates = useMemo(
+    () => Object.values(state.statesByProjectId),
+    [state.statesByProjectId],
+  );
+
+  return {
+    start,
+    stop,
+    getProjectState,
+    getProjectLogs,
+    allStates,
+  };
+}

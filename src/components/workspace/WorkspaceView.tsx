@@ -5,9 +5,28 @@ import styles from './WorkspaceView.module.css';
 
 interface WorkspaceViewProps {
   project: ProjectRecord | null;
+  runState: RunState | null;
+  runLogs: Array<{
+    stream: 'stdout' | 'stderr';
+    chunk: string;
+    timestamp: string;
+  }>;
+  onRunStart: (input: RunStartInput) => Promise<RunState>;
+  onRunStop: (projectId: string) => Promise<RunState>;
+  onUpdateProject: (input: {
+    projectId: string;
+    patch: UpdateProjectInput['patch'];
+  }) => Promise<ProjectsSnapshot>;
 }
 
-export function WorkspaceView({ project }: WorkspaceViewProps) {
+export function WorkspaceView({
+  project,
+  runState,
+  runLogs,
+  onRunStart,
+  onRunStop,
+  onUpdateProject,
+}: WorkspaceViewProps) {
   if (!project) {
     return (
       <div className={styles.emptyState}>
@@ -26,7 +45,14 @@ export function WorkspaceView({ project }: WorkspaceViewProps) {
         <div className={styles.resizeHandleBar} />
       </Separator>
       <Panel className={styles.previewPane} defaultSize="52%" minSize="30%" maxSize="70%">
-        <PreviewPanel project={project} />
+        <PreviewPanel
+          project={project}
+          runState={runState}
+          runLogs={runLogs}
+          onRunStart={onRunStart}
+          onRunStop={onRunStop}
+          onUpdateProject={onUpdateProject}
+        />
       </Panel>
     </Group>
   );

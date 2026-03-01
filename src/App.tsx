@@ -2,6 +2,7 @@ import { Group, Panel, Separator } from 'react-resizable-panels';
 import { ProjectSidebar } from '@/components/projects/ProjectSidebar';
 import { WorkspaceView } from '@/components/workspace/WorkspaceView';
 import { useProjects } from '@/hooks/useProjects';
+import { useRun } from '@/hooks/useRun';
 import styles from './App.module.css';
 
 export default function App() {
@@ -13,7 +14,9 @@ export default function App() {
     error,
     addProjectFromDialog,
     setActiveProject,
+    updateProject,
   } = useProjects();
+  const { start, stop, getProjectState, getProjectLogs } = useRun();
 
   const handleAddProject = async () => {
     try {
@@ -49,7 +52,16 @@ export default function App() {
         minSize="60%"
         maxSize="86%"
       >
-        <WorkspaceView project={activeProject} />
+        <WorkspaceView
+          project={activeProject}
+          runState={
+            activeProject ? getProjectState(activeProject.id) : null
+          }
+          runLogs={activeProject ? getProjectLogs(activeProject.id) : []}
+          onRunStart={start}
+          onRunStop={stop}
+          onUpdateProject={updateProject}
+        />
       </Panel>
     </Group>
   );

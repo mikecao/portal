@@ -70,6 +70,40 @@ export interface AIStreamEvent {
   error?: string;
 }
 
+export type RunStatus = 'idle' | 'starting' | 'running' | 'stopped' | 'error';
+
+export interface RunState {
+  projectId: string;
+  status: RunStatus;
+  command: string;
+  cwd: string;
+  pid?: number;
+  startedAt?: string;
+  exitedAt?: string;
+  exitCode?: number | null;
+  detectedUrl?: string;
+  lastError?: string;
+}
+
+export interface RunStartInput {
+  projectId: string;
+  command: string;
+  cwd: string;
+}
+
+export type RunEvent =
+  | {
+      type: 'state';
+      state: RunState;
+    }
+  | {
+      type: 'log';
+      projectId: string;
+      stream: 'stdout' | 'stderr';
+      chunk: string;
+      timestamp: string;
+    };
+
 export interface PortalAPI {
   ai: {
     chat: (
@@ -86,6 +120,13 @@ export interface PortalAPI {
     remove: (projectId: string) => Promise<ProjectsSnapshot>;
     setActive: (projectId: string | null) => Promise<ProjectsSnapshot>;
     openFolderDialog: () => Promise<string | null>;
+  };
+  run: {
+    start: (input: RunStartInput) => Promise<RunState>;
+    stop: (projectId: string) => Promise<RunState>;
+    state: (projectId: string) => Promise<RunState>;
+    states: () => Promise<RunState[]>;
+    onEvent: (listener: (event: RunEvent) => void) => () => void;
   };
   platform: NodeJS.Platform;
 }
@@ -121,6 +162,21 @@ contextBridge.exposeInMainWorld('portal', {
     setActive: (projectId: string | null) =>
       ipcRenderer.invoke('projects:set-active', projectId),
     openFolderDialog: () => ipcRenderer.invoke('projects:open-folder-dialog'),
+  },
+  run: {
+    start: (input: RunStartInput) => ipcRenderer.invoke('run:start', input),
+    stop: (projectId: string) => ipcRenderer.invoke('run:stop', projectId),
+    state: (projectId: string) => ipcRenderer.invoke('run:state', projectId),
+    states: () => ipcRenderer.invoke('run:states'),
+    onEvent: (listener: (event: RunEvent) => void) => {
+      const channel = 'run:event';
+      const handler = (_event: Electron.IpcRendererEvent, data: RunEvent) => {
+        listener(data);
+      };
+
+      ipcRenderer.on(channel, handler);
+      return () => ipcRenderer.removeListener(channel, handler);
+    },
   },
   platform: process.platform,
 } satisfies PortalAPI);

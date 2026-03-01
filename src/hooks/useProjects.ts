@@ -14,6 +14,11 @@ interface AddProjectOptions {
   preview?: Partial<ProjectRecord['preview']>;
 }
 
+interface UpdateProjectOptions {
+  projectId: string;
+  patch: UpdateProjectInput['patch'];
+}
+
 export function useProjects() {
   const [state, setState] = useState<UseProjectsState>({
     projects: [],
@@ -87,6 +92,20 @@ export function useProjects() {
     [applySnapshot, handleError],
   );
 
+  const updateProject = useCallback(
+    async (input: UpdateProjectOptions) => {
+      try {
+        const snapshot = await window.portal.projects.update(input);
+        applySnapshot(snapshot);
+        return snapshot;
+      } catch (error: unknown) {
+        handleError(error);
+        throw error;
+      }
+    },
+    [applySnapshot, handleError],
+  );
+
   const activeProject = useMemo(
     () => state.projects.find((project) => project.id === state.activeProjectId) ?? null,
     [state.activeProjectId, state.projects],
@@ -102,5 +121,6 @@ export function useProjects() {
     addProject,
     addProjectFromDialog,
     setActiveProject,
+    updateProject,
   };
 }
