@@ -65,6 +65,11 @@ export function PreviewPanel({
   }, [expectedUrl, runState?.detectedUrl]);
 
   useEffect(() => {
+    const previewApi = window.portal?.preview;
+    if (!previewApi) {
+      return;
+    }
+
     const updateBounds = () => {
       const host = previewHostRef.current;
       if (!host) {
@@ -72,7 +77,7 @@ export function PreviewPanel({
       }
 
       const rect = host.getBoundingClientRect();
-      void window.portal.preview.setBounds({
+      void previewApi.setBounds({
         projectId: project.id,
         bounds: {
           x: rect.x,
@@ -101,12 +106,17 @@ export function PreviewPanel({
   }, [project.id]);
 
   useEffect(() => {
-    if (!activeUrl) {
-      void window.portal.preview.clear(project.id);
+    const previewApi = window.portal?.preview;
+    if (!previewApi) {
       return;
     }
 
-    void window.portal.preview.navigate(project.id, activeUrl);
+    if (!activeUrl) {
+      void previewApi.clear(project.id);
+      return;
+    }
+
+    void previewApi.navigate(project.id, activeUrl);
   }, [activeUrl, project.id]);
 
   const handleSaveSettings = async () => {

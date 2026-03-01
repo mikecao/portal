@@ -20,10 +20,15 @@ export default function App() {
   const { start, stop, getProjectState, getProjectLogs } = useRun();
 
   useEffect(() => {
-    void window.portal.preview.setActive(activeProjectId);
+    const previewApi = window.portal?.preview;
+    if (!previewApi) {
+      return;
+    }
+
+    void previewApi.setActive(activeProjectId);
 
     return () => {
-      void window.portal.preview.setActive(null);
+      void previewApi.setActive(null);
     };
   }, [activeProjectId]);
 

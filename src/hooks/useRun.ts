@@ -19,10 +19,15 @@ export function useRun() {
 
   useEffect(() => {
     let isDisposed = false;
+    const runApi = window.portal?.run;
+
+    if (!runApi) {
+      return;
+    }
 
     const setup = async () => {
       try {
-        const initialStates = await window.portal.run.states();
+        const initialStates = await runApi.states();
         if (isDisposed) {
           return;
         }
@@ -44,7 +49,7 @@ export function useRun() {
 
     void setup();
 
-    const unsubscribe = window.portal.run.onEvent((event) => {
+    const unsubscribe = runApi.onEvent((event) => {
       if (event.type === 'state') {
         setState((prev) => ({
           ...prev,
@@ -77,7 +82,18 @@ export function useRun() {
   }, []);
 
   const start = useCallback(async (input: RunStartInput) => {
-    const nextState = await window.portal.run.start(input);
+    const runApi = window.portal?.run;
+    if (!runApi) {
+      return {
+        projectId: input.projectId,
+        status: 'error',
+        command: input.command,
+        cwd: input.cwd,
+        lastError: 'Run API unavailable outside Electron context',
+      } satisfies RunState;
+    }
+
+    const nextState = await runApi.start(input);
     setState((prev) => ({
       ...prev,
       statesByProjectId: {
@@ -93,7 +109,17 @@ export function useRun() {
   }, []);
 
   const stop = useCallback(async (projectId: string) => {
-    const nextState = await window.portal.run.stop(projectId);
+    const runApi = window.portal?.run;
+    if (!runApi) {
+      return {
+        projectId,
+        status: 'stopped',
+        command: '',
+        cwd: '',
+      } satisfies RunState;
+    }
+
+    const nextState = await runApi.stop(projectId);
     setState((prev) => ({
       ...prev,
       statesByProjectId: {
