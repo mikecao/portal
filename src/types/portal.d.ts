@@ -4,11 +4,13 @@ interface AIMessage {
 }
 
 type ChatModelId = 'gpt-5' | 'gpt-5-codex' | 'codex-mini-latest';
-type ReasoningEffort = 'none' | 'low' | 'medium' | 'high';
+type ReasoningEffort = 'low' | 'medium' | 'high' | 'extra-high';
 
 interface AIChatOptions {
   modelId: ChatModelId;
   reasoningEffort: ReasoningEffort;
+  projectRootPath?: string;
+  projectName?: string;
 }
 
 interface StoredChatMessage {

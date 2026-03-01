@@ -162,7 +162,12 @@ export function useChat({ project, onPersistChat }: UseChatInput) {
         if (typeof window !== 'undefined' && window.portal) {
           await window.portal.ai.chat(
             chatMessages,
-            { modelId, reasoningEffort },
+            {
+              modelId,
+              reasoningEffort,
+              projectRootPath: project.rootPath,
+              projectName: project.name,
+            },
             (event) => {
               if (event.type === 'text-delta' && event.content) {
                 assistantContentRef.current += event.content;
@@ -245,7 +250,7 @@ export function useChat({ project, onPersistChat }: UseChatInput) {
         setIsLoading(false);
       }
     },
-    [isLoading, messages, modelId, reasoningEffort],
+    [isLoading, messages, modelId, reasoningEffort, project.name, project.rootPath],
   );
 
   useEffect(() => {

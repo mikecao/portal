@@ -14,7 +14,7 @@ const chatgpt = createChatGPTOAuth({
 });
 
 const allowedModels = ['gpt-5', 'gpt-5-codex', 'codex-mini-latest'];
-const allowedEfforts = ['none', 'low', 'medium', 'high'];
+const allowedEfforts = ['low', 'medium', 'high', 'extra-high'];
 
 function normalizeModelId(modelId) {
   if (typeof modelId === 'string' && allowedModels.includes(modelId)) {
@@ -24,6 +24,10 @@ function normalizeModelId(modelId) {
 }
 
 function normalizeReasoningEffort(reasoningEffort) {
+  if (reasoningEffort === 'none') {
+    return 'low';
+  }
+
   if (typeof reasoningEffort === 'string' && allowedEfforts.includes(reasoningEffort)) {
     return reasoningEffort;
   }
@@ -31,8 +35,11 @@ function normalizeReasoningEffort(reasoningEffort) {
 }
 
 function getModel(modelId, reasoningEffort) {
+  const providerReasoningEffort =
+    reasoningEffort === 'extra-high' ? 'high' : reasoningEffort;
+
   return chatgpt(modelId, {
-    reasoningEffort: reasoningEffort === 'none' ? null : reasoningEffort,
+    reasoningEffort: providerReasoningEffort,
   });
 }
 

@@ -6,11 +6,13 @@ export interface AIMessage {
 }
 
 export type ChatModelId = 'gpt-5' | 'gpt-5-codex' | 'codex-mini-latest';
-export type ReasoningEffort = 'none' | 'low' | 'medium' | 'high';
+export type ReasoningEffort = 'low' | 'medium' | 'high' | 'extra-high';
 
 export interface AIChatOptions {
   modelId: ChatModelId;
   reasoningEffort: ReasoningEffort;
+  projectRootPath?: string;
+  projectName?: string;
 }
 
 export interface StoredChatMessage {
