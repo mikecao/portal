@@ -19,6 +19,22 @@ interface PreviewPanelProps {
 
 const RUNNING_STATES: RunStatus[] = ['starting', 'running'];
 
+function normalizePreviewUrl(value: string): string | null {
+  const raw = value.trim();
+  if (!raw) {
+    return null;
+  }
+
+  const withProtocol = /^https?:\/\//i.test(raw) ? raw : `http://${raw}`;
+
+  try {
+    const url = new URL(withProtocol);
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
 export function PreviewPanel({
   project,
   runState,
@@ -43,12 +59,9 @@ export function PreviewPanel({
 
   const activeUrl = useMemo(() => {
     if (runState?.detectedUrl) {
-      return runState.detectedUrl;
+      return normalizePreviewUrl(runState.detectedUrl);
     }
-    if (expectedUrl.trim()) {
-      return expectedUrl.trim();
-    }
-    return null;
+    return normalizePreviewUrl(expectedUrl);
   }, [expectedUrl, runState?.detectedUrl]);
 
   useEffect(() => {

@@ -43,6 +43,7 @@ export function useProjects() {
   }, []);
 
   const reload = useCallback(async () => {
+    setState((prev) => ({ ...prev, isLoading: true }));
     try {
       const snapshot = await window.portal.projects.list();
       applySnapshot(snapshot);

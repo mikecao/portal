@@ -21,6 +21,10 @@ export default function App() {
 
   useEffect(() => {
     void window.portal.preview.setActive(activeProjectId);
+
+    return () => {
+      void window.portal.preview.setActive(null);
+    };
   }, [activeProjectId]);
 
   const handleAddProject = async () => {

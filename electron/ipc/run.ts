@@ -1,4 +1,5 @@
 import { spawn, type ChildProcess } from 'node:child_process';
+import { stat } from 'node:fs/promises';
 import { type IpcMain, BrowserWindow, app } from 'electron';
 
 export type RunStatus = 'idle' | 'starting' | 'running' | 'stopped' | 'error';
@@ -54,6 +55,7 @@ class RunProcessManager {
     if (!cwd) {
       throw new Error('cwd is required');
     }
+    await assertDirectory(cwd);
 
     await this.stop(input.projectId);
 
@@ -248,6 +250,13 @@ async function killProcessTree(child: ChildProcess): Promise<void> {
       resolve();
     }, 1500);
   });
+}
+
+async function assertDirectory(cwd: string) {
+  const details = await stat(cwd);
+  if (!details.isDirectory()) {
+    throw new Error(`cwd is not a directory: ${cwd}`);
+  }
 }
 
 export function registerRunHandlers(ipcMain: IpcMain) {

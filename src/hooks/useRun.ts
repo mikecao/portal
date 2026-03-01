@@ -21,18 +21,25 @@ export function useRun() {
     let isDisposed = false;
 
     const setup = async () => {
-      const initialStates = await window.portal.run.states();
-      if (isDisposed) {
-        return;
-      }
+      try {
+        const initialStates = await window.portal.run.states();
+        if (isDisposed) {
+          return;
+        }
 
-      setState((prev) => ({
-        ...prev,
-        statesByProjectId: initialStates.reduce<Record<string, RunState>>((acc, entry) => {
-          acc[entry.projectId] = entry;
-          return acc;
-        }, {}),
-      }));
+        setState((prev) => ({
+          ...prev,
+          statesByProjectId: initialStates.reduce<Record<string, RunState>>(
+            (acc, entry) => {
+              acc[entry.projectId] = entry;
+              return acc;
+            },
+            {},
+          ),
+        }));
+      } catch (error) {
+        console.error('[run] failed to initialize states', error);
+      }
     };
 
     void setup();
