@@ -1,4 +1,5 @@
 import { Group, Panel, Separator } from 'react-resizable-panels';
+import { useEffect } from 'react';
 import { ProjectSidebar } from '@/components/projects/ProjectSidebar';
 import { WorkspaceView } from '@/components/workspace/WorkspaceView';
 import { useProjects } from '@/hooks/useProjects';
@@ -17,6 +18,10 @@ export default function App() {
     updateProject,
   } = useProjects();
   const { start, stop, getProjectState, getProjectLogs } = useRun();
+
+  useEffect(() => {
+    void window.portal.preview.setActive(activeProjectId);
+  }, [activeProjectId]);
 
   const handleAddProject = async () => {
     try {

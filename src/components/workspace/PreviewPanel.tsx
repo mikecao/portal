@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import styles from './PreviewPanel.module.css';
 
 interface PreviewPanelProps {
@@ -27,6 +27,7 @@ export function PreviewPanel({
   onRunStop,
   onUpdateProject,
 }: PreviewPanelProps) {
+  const previewHostRef = useRef<HTMLDivElement>(null);
   const [devCommand, setDevCommand] = useState(project.commands.devCommand);
   const [expectedUrl, setExpectedUrl] = useState(project.preview.expectedUrl ?? '');
   const [isSaving, setIsSaving] = useState(false);
@@ -49,6 +50,51 @@ export function PreviewPanel({
     }
     return null;
   }, [expectedUrl, runState?.detectedUrl]);
+
+  useEffect(() => {
+    const updateBounds = () => {
+      const host = previewHostRef.current;
+      if (!host) {
+        return;
+      }
+
+      const rect = host.getBoundingClientRect();
+      void window.portal.preview.setBounds({
+        projectId: project.id,
+        bounds: {
+          x: rect.x,
+          y: rect.y,
+          width: rect.width,
+          height: rect.height,
+        },
+      });
+    };
+
+    updateBounds();
+
+    const host = previewHostRef.current;
+    if (!host) {
+      return;
+    }
+
+    const observer = new ResizeObserver(updateBounds);
+    observer.observe(host);
+    window.addEventListener('resize', updateBounds);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateBounds);
+    };
+  }, [project.id]);
+
+  useEffect(() => {
+    if (!activeUrl) {
+      void window.portal.preview.clear(project.id);
+      return;
+    }
+
+    void window.portal.preview.navigate(project.id, activeUrl);
+  }, [activeUrl, project.id]);
 
   const handleSaveSettings = async () => {
     if (!devCommand.trim()) {
@@ -150,6 +196,12 @@ export function PreviewPanel({
             {activeUrl}
           </a>
         )}
+      </div>
+
+      <div ref={previewHostRef} className={styles.previewHost}>
+        <div className={styles.previewHostOverlay}>
+          {activeUrl ? 'Embedded preview is active' : 'Run the app to start embedded preview'}
+        </div>
       </div>
 
       <div className={styles.logs}>

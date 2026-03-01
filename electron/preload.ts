@@ -104,6 +104,13 @@ export type RunEvent =
       timestamp: string;
     };
 
+export interface PreviewBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface PortalAPI {
   ai: {
     chat: (
@@ -127,6 +134,12 @@ export interface PortalAPI {
     state: (projectId: string) => Promise<RunState>;
     states: () => Promise<RunState[]>;
     onEvent: (listener: (event: RunEvent) => void) => () => void;
+  };
+  preview: {
+    setActive: (projectId: string | null) => Promise<void>;
+    setBounds: (input: { projectId: string; bounds: PreviewBounds }) => Promise<void>;
+    navigate: (projectId: string, url: string) => Promise<void>;
+    clear: (projectId: string) => Promise<void>;
   };
   platform: NodeJS.Platform;
 }
@@ -177,6 +190,15 @@ contextBridge.exposeInMainWorld('portal', {
       ipcRenderer.on(channel, handler);
       return () => ipcRenderer.removeListener(channel, handler);
     },
+  },
+  preview: {
+    setActive: (projectId: string | null) =>
+      ipcRenderer.invoke('preview:set-active', projectId),
+    setBounds: (input: { projectId: string; bounds: PreviewBounds }) =>
+      ipcRenderer.invoke('preview:set-bounds', input),
+    navigate: (projectId: string, url: string) =>
+      ipcRenderer.invoke('preview:navigate', projectId, url),
+    clear: (projectId: string) => ipcRenderer.invoke('preview:clear', projectId),
   },
   platform: process.platform,
 } satisfies PortalAPI);

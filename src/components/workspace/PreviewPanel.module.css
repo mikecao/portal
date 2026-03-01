@@ -130,6 +130,28 @@
   border-bottom: 1px solid var(--border);
 }
 
+.previewHost {
+  height: 320px;
+  min-height: 200px;
+  position: relative;
+  border-bottom: 1px solid var(--border);
+  background: #0f172a;
+}
+
+.previewHostOverlay {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  font-size: 11px;
+  color: #cbd5e1;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  padding: 4px 8px;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
 .name {
   font-size: 14px;
   font-weight: 600;

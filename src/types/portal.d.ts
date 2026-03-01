@@ -102,6 +102,13 @@ type RunEvent =
       timestamp: string;
     };
 
+interface PreviewBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 interface PortalAPI {
   ai: {
     chat: (
@@ -125,6 +132,12 @@ interface PortalAPI {
     state: (projectId: string) => Promise<RunState>;
     states: () => Promise<RunState[]>;
     onEvent: (listener: (event: RunEvent) => void) => () => void;
+  };
+  preview: {
+    setActive: (projectId: string | null) => Promise<void>;
+    setBounds: (input: { projectId: string; bounds: PreviewBounds }) => Promise<void>;
+    navigate: (projectId: string, url: string) => Promise<void>;
+    clear: (projectId: string) => Promise<void>;
   };
   platform: NodeJS.Platform;
 }
