@@ -2,6 +2,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { app, BrowserWindow, ipcMain, nativeTheme } from 'electron';
 import { registerAIHandlers } from './ipc/ai.js';
+import { registerProjectHandlers } from './ipc/projects.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -45,6 +46,7 @@ function createWindow() {
 
 app.whenReady().then(() => {
   registerAIHandlers(ipcMain);
+  registerProjectHandlers(ipcMain);
   createWindow();
 
   app.on('activate', () => {
