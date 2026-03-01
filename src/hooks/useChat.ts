@@ -8,7 +8,7 @@ interface Message {
 }
 
 export type ChatModelId = 'gpt-5' | 'gpt-5-codex' | 'codex-mini-latest';
-export type ReasoningEffort = 'none' | 'low' | 'medium' | 'high';
+export type ReasoningEffort = 'low' | 'medium' | 'high' | 'extra-high';
 
 interface UseChatInput {
   project: ProjectRecord;
@@ -38,6 +38,23 @@ function toStoredMessages(messages: Message[]): StoredChatMessage[] {
   }));
 }
 
+function buildChatSignature(
+  messages: Array<{
+    id: string;
+    role: string;
+    content: string;
+    createdAt: string;
+  }>,
+  modelId: ChatModelId,
+  reasoningEffort: ReasoningEffort,
+): string {
+  return JSON.stringify({
+    modelId,
+    reasoningEffort,
+    messages,
+  });
+}
+
 export function useChat({ project, onPersistChat }: UseChatInput) {
   const [messages, setMessages] = useState<Message[]>(() =>
     toLocalMessages(project.chat.messages),
@@ -48,14 +65,50 @@ export function useChat({ project, onPersistChat }: UseChatInput) {
     project.chat.reasoningEffort,
   );
   const assistantContentRef = useRef('');
+  const localChatSignatureRef = useRef(
+    buildChatSignature(
+      toLocalMessages(project.chat.messages),
+      project.chat.modelId,
+      project.chat.reasoningEffort,
+    ),
+  );
+
+  const remoteChatSignature = useMemo(
+    () =>
+      buildChatSignature(
+        toLocalMessages(project.chat.messages),
+        project.chat.modelId,
+        project.chat.reasoningEffort,
+      ),
+    [project.chat.messages, project.chat.modelId, project.chat.reasoningEffort],
+  );
 
   useEffect(() => {
+    localChatSignatureRef.current = buildChatSignature(
+      messages,
+      modelId,
+      reasoningEffort,
+    );
+  }, [messages, modelId, reasoningEffort]);
+
+  useEffect(() => {
+    if (localChatSignatureRef.current === remoteChatSignature) {
+      return;
+    }
+
     setMessages(toLocalMessages(project.chat.messages));
     setModelId(project.chat.modelId);
     setReasoningEffort(project.chat.reasoningEffort);
     setIsLoading(false);
     assistantContentRef.current = '';
-  }, [project.chat.messages, project.chat.modelId, project.chat.reasoningEffort, project.id]);
+    localChatSignatureRef.current = remoteChatSignature;
+  }, [
+    project.chat.messages,
+    project.chat.modelId,
+    project.chat.reasoningEffort,
+    project.id,
+    remoteChatSignature,
+  ]);
 
   const persistChat = useCallback(
     async (
@@ -200,8 +253,20 @@ export function useChat({ project, onPersistChat }: UseChatInput) {
       return;
     }
 
-    void persistChat(messages);
-  }, [isLoading, messages, persistChat]);
+    const localSignature = buildChatSignature(messages, modelId, reasoningEffort);
+    if (localSignature === remoteChatSignature) {
+      return;
+    }
+
+    void persistChat(messages, modelId, reasoningEffort);
+  }, [
+    isLoading,
+    messages,
+    modelId,
+    reasoningEffort,
+    remoteChatSignature,
+    persistChat,
+  ]);
 
   const stopGeneration = useCallback(() => {
     if (typeof window !== 'undefined' && window.portal) {
@@ -218,17 +283,15 @@ export function useChat({ project, onPersistChat }: UseChatInput) {
   const updateModelId = useCallback(
     (nextModelId: ChatModelId) => {
       setModelId(nextModelId);
-      void persistChat(messages, nextModelId, reasoningEffort);
     },
-    [messages, persistChat, reasoningEffort],
+    [],
   );
 
   const updateReasoningEffort = useCallback(
     (nextReasoningEffort: ReasoningEffort) => {
       setReasoningEffort(nextReasoningEffort);
-      void persistChat(messages, modelId, nextReasoningEffort);
     },
-    [messages, modelId, persistChat],
+    [],
   );
 
   const messageCount = useMemo(() => messages.length, [messages]);

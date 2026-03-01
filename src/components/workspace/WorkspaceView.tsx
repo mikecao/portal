@@ -1,4 +1,5 @@
 import { Group, Panel, Separator } from 'react-resizable-panels';
+import { useCallback } from 'react';
 import { ChatPanel } from '@/components/chat/ChatPanel';
 import { PreviewPanel } from './PreviewPanel';
 import styles from './WorkspaceView.module.css';
@@ -27,6 +28,16 @@ export function WorkspaceView({
   onRunStop,
   onUpdateProject,
 }: WorkspaceViewProps) {
+  const handlePersistChat = useCallback(
+    async ({ projectId, chat }: { projectId: string; chat: ProjectRecord['chat'] }) => {
+      await onUpdateProject({
+        projectId,
+        patch: { chat },
+      });
+    },
+    [onUpdateProject],
+  );
+
   if (!project) {
     return (
       <div className={styles.emptyState}>
@@ -39,15 +50,7 @@ export function WorkspaceView({
   return (
     <Group className={styles.container} orientation="horizontal" id="workspace-layout">
       <Panel className={styles.chatPane} defaultSize="48%" minSize="30%" maxSize="70%">
-        <ChatPanel
-          project={project}
-          onPersistChat={async ({ projectId, chat }) => {
-            await onUpdateProject({
-              projectId,
-              patch: { chat },
-            });
-          }}
-        />
+        <ChatPanel project={project} onPersistChat={handlePersistChat} />
       </Panel>
       <Separator className={styles.resizeHandle}>
         <div className={styles.resizeHandleBar} />
