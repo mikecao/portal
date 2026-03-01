@@ -140,10 +140,10 @@ export function ChatPanel({ project, onPersistChat }: ChatPanelProps) {
                 disabled={isLoading}
                 title="Reasoning"
               >
-                <option value="none">Reasoning: None</option>
-                <option value="low">Reasoning: Low</option>
-                <option value="medium">Reasoning: Medium</option>
-                <option value="high">Reasoning: High</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="extra-high">Extra High</option>
               </select>
             </div>
 
