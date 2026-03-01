@@ -42,17 +42,29 @@ export function useProjects() {
     setState((prev) => ({ ...prev, isLoading: false, error: message }));
   }, []);
 
+  const getProjectsApi = useCallback(() => window.portal?.projects ?? null, []);
+
   const reload = useCallback(async () => {
     setState((prev) => ({ ...prev, isLoading: true }));
+
+    const projectsApi = getProjectsApi();
+    if (!projectsApi) {
+      applySnapshot({
+        activeProjectId: null,
+        projects: [],
+      });
+      return null;
+    }
+
     try {
-      const snapshot = await window.portal.projects.list();
+      const snapshot = await projectsApi.list();
       applySnapshot(snapshot);
       return snapshot;
     } catch (error: unknown) {
       handleError(error);
-      throw error;
+      return null;
     }
-  }, [applySnapshot, handleError]);
+  }, [applySnapshot, getProjectsApi, handleError]);
 
   useEffect(() => {
     void reload();
@@ -60,51 +72,73 @@ export function useProjects() {
 
   const addProject = useCallback(
     async (input: AddProjectOptions) => {
+      const projectsApi = getProjectsApi();
+      if (!projectsApi) {
+        handleError(new Error('Projects API unavailable outside Electron context'));
+        return null;
+      }
+
       try {
-        const snapshot = await window.portal.projects.add(input);
+        const snapshot = await projectsApi.add(input);
         applySnapshot(snapshot);
         return snapshot;
       } catch (error: unknown) {
         handleError(error);
-        throw error;
+        return null;
       }
     },
-    [applySnapshot, handleError],
+    [applySnapshot, getProjectsApi, handleError],
   );
 
   const addProjectFromDialog = useCallback(async () => {
-    const rootPath = await window.portal.projects.openFolderDialog();
+    const projectsApi = getProjectsApi();
+    if (!projectsApi) {
+      return null;
+    }
+
+    const rootPath = await projectsApi.openFolderDialog();
     if (!rootPath) {
       return null;
     }
 
     return addProject({ rootPath });
-  }, [addProject]);
+  }, [addProject, getProjectsApi]);
 
   const setActiveProject = useCallback(
     async (projectId: string | null) => {
+      const projectsApi = getProjectsApi();
+      if (!projectsApi) {
+        return;
+      }
+
       try {
-        const snapshot = await window.portal.projects.setActive(projectId);
+        const snapshot = await projectsApi.setActive(projectId);
         applySnapshot(snapshot);
       } catch (error: unknown) {
         handleError(error);
       }
     },
-    [applySnapshot, handleError],
+    [applySnapshot, getProjectsApi, handleError],
   );
 
   const updateProject = useCallback(
     async (input: UpdateProjectOptions) => {
+      const projectsApi = getProjectsApi();
+      if (!projectsApi) {
+        handleError(new Error('Projects API unavailable outside Electron context'));
+        return null;
+      }
+
       try {
-        const snapshot = await window.portal.projects.update(input);
+        const snapshot = await projectsApi.update(input);
         applySnapshot(snapshot);
         return snapshot;
       } catch (error: unknown) {
         handleError(error);
-        throw error;
+        return null;
       }
     },
-    [applySnapshot, handleError],
+    [applySnapshot, getProjectsApi, handleError],
   );
 
   const activeProject = useMemo(
