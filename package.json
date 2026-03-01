@@ -10,7 +10,7 @@
     "dev": "concurrently --kill-others \"node server/chat-api.mjs\" \"vite --port 3333 --strictPort\"",
     "build": "vite build",
     "start": "concurrently --kill-others \"node server/chat-api.mjs\" \"vite preview --port 3333 --strictPort\"",
-    "electron:compile": "tsup electron/main.ts electron/preload.ts --format esm --outDir dist-electron --external electron",
+    "electron:compile": "tsup electron/main.ts --format esm --outDir dist-electron --external electron && tsup electron/preload.ts --format cjs --outDir dist-electron --external electron",
     "electron:dev": "pnpm electron:compile && concurrently --kill-others \"sh -c 'if lsof -iTCP:3334 -sTCP:LISTEN -n -P >/dev/null; then echo \\\"[api] Reusing existing server on :3334\\\"; tail -f /dev/null; else node server/chat-api.mjs; fi'\" \"sh -c 'if lsof -iTCP:3333 -sTCP:LISTEN -n -P >/dev/null; then echo \\\"[web] Reusing existing dev server on :3333\\\"; tail -f /dev/null; else vite --port 3333 --strictPort; fi'\" \"wait-on tcp:3333 tcp:3334 && electron .\"",
     "electron:build": "pnpm electron:compile && vite build && electron-builder",
     "postinstall": "electron-builder install-app-deps"
