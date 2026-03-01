@@ -1,17 +1,39 @@
-import { useState, useRef, useEffect } from 'react';
-import { useChat } from '@/hooks/useChat';
+import { useEffect, useRef, useState } from 'react';
+import {
+  useChat,
+  type ChatModelId,
+  type ReasoningEffort,
+} from '@/hooks/useChat';
 import styles from './ChatPanel.module.css';
 
-export function ChatPanel() {
+const modelLabels: Record<ChatModelId, string> = {
+  'gpt-5': 'GPT-5',
+  'gpt-5-codex': 'GPT-5 Codex',
+  'codex-mini-latest': 'Codex Mini',
+};
+
+interface ChatPanelProps {
+  project: ProjectRecord;
+  onPersistChat: (input: {
+    projectId: string;
+    chat: ProjectRecord['chat'];
+  }) => Promise<void>;
+}
+
+export function ChatPanel({ project, onPersistChat }: ChatPanelProps) {
   const {
     messages,
     isLoading,
-    provider,
-    setProvider,
+    messageCount,
+    modelId,
+    setModelId,
+    reasoningEffort,
+    setReasoningEffort,
     sendMessage,
     stopGeneration,
     clearMessages,
-  } = useChat();
+  } = useChat({ project, onPersistChat });
+
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -40,88 +62,109 @@ export function ChatPanel() {
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.style.height = 'auto';
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 220)}px`;
     }
   };
 
   return (
-    <div className={styles.panel}>
-      <div className={styles.header}>
+    <section className={styles.panel}>
+      <header className={styles.header}>
         <div className={styles.headerLeft}>
-          <span className={styles.title}>Chat</span>
+          <h2 className={styles.title}>{project.name}</h2>
+          <span className={styles.meta}>{messageCount} messages</span>
         </div>
         <div className={styles.headerRight}>
-          <select
-            className={styles.providerSelect}
-            value={provider}
-            onChange={(e) => setProvider(e.target.value as 'anthropic' | 'openai')}
-          >
-            <option value="openai">GPT-5</option>
-            <option value="anthropic">Claude</option>
-          </select>
-          <button
-            className={styles.clearButton}
-            onClick={clearMessages}
-            title="Clear chat"
-          >
+          <button className={styles.ghostButton} onClick={clearMessages}>
             Clear
           </button>
         </div>
-      </div>
+      </header>
 
       <div className={styles.messages}>
         {messages.length === 0 && (
           <div className={styles.empty}>
-            <p className={styles.emptyTitle}>Portal AI</p>
-            <p className={styles.emptySubtitle}>Ask anything about your code</p>
+            <p className={styles.emptyTitle}>Start building with AI</p>
+            <p className={styles.emptySubtitle}>Ask for architecture, fixes, or code changes.</p>
           </div>
         )}
+
         {messages.map((message) => (
-          <div
+          <article
             key={message.id}
             className={`${styles.message} ${
               message.role === 'user' ? styles.userMessage : styles.assistantMessage
             }`}
           >
             <div className={styles.messageRole}>
-              {message.role === 'user' ? 'You' : provider === 'anthropic' ? 'Claude' : 'GPT-5'}
+              {message.role === 'user' ? 'You' : modelLabels[modelId]}
             </div>
-            <div className={styles.messageContent}>
-              {message.content || (isLoading ? '...' : '')}
-            </div>
-          </div>
+            <div className={styles.messageContent}>{message.content || (isLoading ? '...' : '')}</div>
+          </article>
         ))}
+
         <div ref={messagesEndRef} />
       </div>
 
-      <div className={styles.inputArea}>
-        <div className={styles.inputWrapper}>
+      <div className={styles.composerWrap}>
+        <div className={styles.inputShell}>
           <textarea
             ref={textareaRef}
             className={styles.textarea}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(event) => setInput(event.target.value)}
             onKeyDown={handleKeyDown}
             onInput={handleTextareaInput}
-            placeholder="Ask a question..."
+            placeholder="Ask Codex"
             rows={1}
             disabled={isLoading}
           />
-          {isLoading ? (
-            <button className={styles.stopButton} onClick={stopGeneration}>
-              Stop
-            </button>
-          ) : (
-            <button
-              className={styles.sendButton}
-              onClick={handleSubmit}
-              disabled={!input.trim()}
-            >
-              Send
-            </button>
-          )}
+
+          <div className={styles.composerFooter}>
+            <div className={styles.optionsLeft}>
+              <select
+                className={styles.optionSelect}
+                value={modelId}
+                onChange={(event) => setModelId(event.target.value as ChatModelId)}
+                disabled={isLoading}
+                title="Model"
+              >
+                <option value="gpt-5">GPT-5</option>
+                <option value="gpt-5-codex">GPT-5 Codex</option>
+                <option value="codex-mini-latest">Codex Mini</option>
+              </select>
+
+              <select
+                className={styles.optionSelect}
+                value={reasoningEffort}
+                onChange={(event) => setReasoningEffort(event.target.value as ReasoningEffort)}
+                disabled={isLoading}
+                title="Reasoning"
+              >
+                <option value="none">Reasoning: None</option>
+                <option value="low">Reasoning: Low</option>
+                <option value="medium">Reasoning: Medium</option>
+                <option value="high">Reasoning: High</option>
+              </select>
+            </div>
+
+            <div className={styles.actionsRight}>
+              {isLoading ? (
+                <button className={styles.stopButton} onClick={stopGeneration}>
+                  Stop
+                </button>
+              ) : (
+                <button
+                  className={styles.sendButton}
+                  onClick={handleSubmit}
+                  disabled={!input.trim()}
+                >
+                  Send
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

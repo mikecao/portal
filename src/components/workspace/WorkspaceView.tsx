@@ -39,7 +39,15 @@ export function WorkspaceView({
   return (
     <Group className={styles.container} orientation="horizontal" id="workspace-layout">
       <Panel className={styles.chatPane} defaultSize="48%" minSize="30%" maxSize="70%">
-        <ChatPanel key={project.id} />
+        <ChatPanel
+          project={project}
+          onPersistChat={async ({ projectId, chat }) => {
+            await onUpdateProject({
+              projectId,
+              patch: { chat },
+            });
+          }}
+        />
       </Panel>
       <Separator className={styles.resizeHandle}>
         <div className={styles.resizeHandleBar} />
