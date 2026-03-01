@@ -1,18 +1,12 @@
 .container {
   display: flex;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
-}
-
-.sidebarPane {
   height: 100%;
+  width: 100%;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
 }
 
-.workspacePane {
+.chatPane,
+.previewPane {
   height: 100%;
   overflow: hidden;
 }
@@ -41,13 +35,22 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
-.errorBanner {
-  border-top: 1px solid #7f1d1d;
-  background: #451a1a;
-  color: #fecaca;
-  padding: 8px 12px;
-  font-size: 11px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.emptyState {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.emptyStateTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-bright);
+}
+
+.emptyStateSubtitle {
+  color: var(--text-secondary);
+  font-size: 13px;
 }

@@ -1,29 +1,55 @@
 import { Group, Panel, Separator } from 'react-resizable-panels';
-import { ChatPanel } from '@/components/chat/ChatPanel';
-import { EditorPanel } from '@/components/editor/EditorPanel';
+import { ProjectSidebar } from '@/components/projects/ProjectSidebar';
+import { WorkspaceView } from '@/components/workspace/WorkspaceView';
+import { useProjects } from '@/hooks/useProjects';
 import styles from './App.module.css';
 
 export default function App() {
+  const {
+    projects,
+    activeProjectId,
+    activeProject,
+    isLoading,
+    error,
+    addProjectFromDialog,
+    setActiveProject,
+  } = useProjects();
+
+  const handleAddProject = async () => {
+    try {
+      await addProjectFromDialog();
+    } catch {
+      // Errors are surfaced through hook state.
+    }
+  };
+
   return (
-    <Group className={styles.container} orientation="horizontal" id="portal-layout">
+    <Group className={styles.container} orientation="horizontal" id="portal-shell">
       <Panel
-        className={styles.editorPane}
-        defaultSize="50%"
-        minSize="20%"
-        maxSize="80%"
+        className={styles.sidebarPane}
+        defaultSize="24%"
+        minSize="14%"
+        maxSize="40%"
       >
-        <EditorPanel />
+        <ProjectSidebar
+          projects={projects}
+          activeProjectId={activeProjectId}
+          isLoading={isLoading}
+          onAddProject={handleAddProject}
+          onSelectProject={setActiveProject}
+        />
+        {error && <div className={styles.errorBanner}>{error}</div>}
       </Panel>
       <Separator className={styles.resizeHandle}>
         <div className={styles.resizeHandleBar} />
       </Separator>
       <Panel
-        className={styles.chatPane}
-        defaultSize="50%"
-        minSize="20%"
-        maxSize="80%"
+        className={styles.workspacePane}
+        defaultSize="76%"
+        minSize="60%"
+        maxSize="86%"
       >
-        <ChatPanel />
+        <WorkspaceView project={activeProject} />
       </Panel>
     </Group>
   );
